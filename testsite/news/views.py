@@ -1,9 +1,35 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import redirect, render
 from django.views.generic import ListView, DetailView, CreateView
 from .models import News, Category
-from .forms import NewsForm
+from .forms import NewsForm, UserRegisterForm
 from .utils import MyMixin
-from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
+from django.contrib import messages
+
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Регистрация успешна')
+            return redirect('login')
+        else:
+            messages.error(request, 'Ошибка регистрации')
+    else:
+        form = UserRegisterForm()
+    return render(request, 'news/register.html', {'form': form})
+    
+def login(request):
+    return render(request, 'news/login.html')
+
+# def test(request):
+#     objects = ['josh', 'paul', 'george', 'ringo', 'josh4', 'paul5', 'georg6']
+#     paginator = Paginator(objects, 2)
+#     page_num = request.GET.get('page', 1)
+#     page_objects = paginator.get_page(page_num)
+#     return render(request, 'news/test.html', {'page_obj': page_objects})
 
 
 class HomeNews(MyMixin, ListView):
@@ -12,6 +38,7 @@ class HomeNews(MyMixin, ListView):
     context_object_name = 'news'
     allow_empty = False
     mixin_prop = 'hello world'
+    paginate_by = 2
     # extra_context = {'title': 'Главная'}
 
     def get_context_data(self, **kwargs):
@@ -32,6 +59,7 @@ class CategoryNews(MyMixin, ListView):
     template_name = 'news/home_news_list.html'
     context_object_name = 'news'
     allow_empty = False
+    paginate_by = 2
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -54,9 +82,10 @@ class ViewNews(DetailView):
 
 
 
-class CreateNews(CreateView):
+class CreateNews(LoginRequiredMixin, CreateView):
     form_class = NewsForm
     template_name = 'news/add_news.html'
+    login_url = '/admin/'
     # success_url = reverse_lazy('home')
 
 
