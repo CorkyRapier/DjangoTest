@@ -1,4 +1,4 @@
-class MyMixin(object):
+class MyMixin(object): #Тестовый миксин
     mixin_prop = ''
 
     def get_prop(self):

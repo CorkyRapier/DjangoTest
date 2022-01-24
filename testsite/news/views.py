@@ -8,36 +8,11 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 
 
-def register(request):
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Регистрация успешна')
-            return redirect('login')
-        else:
-            messages.error(request, 'Ошибка регистрации')
-    else:
-        form = UserRegisterForm()
-    return render(request, 'news/register.html', {'form': form})
-    
-def login(request):
-    return render(request, 'news/login.html')
-
-# def test(request):
-#     objects = ['josh', 'paul', 'george', 'ringo', 'josh4', 'paul5', 'georg6']
-#     paginator = Paginator(objects, 2)
-#     page_num = request.GET.get('page', 1)
-#     page_objects = paginator.get_page(page_num)
-#     return render(request, 'news/test.html', {'page_obj': page_objects})
-
-
 class HomeNews(MyMixin, ListView):
     model = News
     template_name = 'news/home_news_list.html'
     context_object_name = 'news'
     allow_empty = False
-    mixin_prop = 'hello world'
     paginate_by = 2
     # extra_context = {'title': 'Главная'}
 
@@ -49,9 +24,6 @@ class HomeNews(MyMixin, ListView):
 
     def get_queryset(self):
         return News.objects.filter(is_published=True).select_related('category')
-
-
-
 
 
 class CategoryNews(MyMixin, ListView):
@@ -70,16 +42,11 @@ class CategoryNews(MyMixin, ListView):
         return News.objects.filter(category_id=self.kwargs['category_id'], is_published=True).select_related('category')
 
 
-
-
-
 class ViewNews(DetailView):
     model = News
     context_object_name = 'news_item'
     # template_name = 'news/news_detail.html'
     # pk_url_kwarg = 'news_id'
-
-
 
 
 class CreateNews(LoginRequiredMixin, CreateView):
@@ -88,6 +55,31 @@ class CreateNews(LoginRequiredMixin, CreateView):
     login_url = '/admin/'
     # success_url = reverse_lazy('home')
 
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Регистрация успешна')
+            return redirect('login')
+        else:
+            messages.error(request, 'Ошибка регистрации')
+    else:
+        form = UserRegisterForm()
+    return render(request, 'news/register.html', {'form': form})
+
+
+def login(request):
+    return render(request, 'news/login.html')
+
+
+# def test(request):
+#     objects = ['josh', 'paul', 'george', 'ringo', 'josh4', 'paul5', 'georg6']
+#     paginator = Paginator(objects, 2)
+#     page_num = request.GET.get('page', 1)
+#     page_objects = paginator.get_page(page_num)
+#     return render(request, 'news/test.html', {'page_obj': page_objects})
 
 
 # def index(request):
@@ -99,18 +91,18 @@ class CreateNews(LoginRequiredMixin, CreateView):
 #     return render(request, 'news/index.html', context)
 
 
-
-
 # def get_category(request, category_id):
 #     news = News.objects.filter(category_id=category_id)
 #     category = Category.objects.get(pk=category_id)
     
 #     return render(request, 'news/category.html', {'news': news, 'category': category})
 
+
 # def view_news(request, news_id):
 #     # news_item = News.objects.get(pk=news_id)
 #     news_item = get_object_or_404(News, pk=news_id)
 #     return render(request, 'news/view_news.html', {'news_item': news_item})
+
 
 # def add_news(request):
 #     if request.method == 'POST':
