@@ -1,11 +1,13 @@
 from django.shortcuts import redirect, render
 from django.views.generic import ListView, DetailView, CreateView
 from .models import News, Category
-from .forms import NewsForm, UserRegisterForm
+from .forms import NewsForm, UserRegisterForm, UserLoginForm, ContactForm
 from .utils import MyMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.contrib import messages
+from django.contrib.auth import login, logout
+from django.core.mail import send_mail
 
 
 class HomeNews(MyMixin, ListView):
@@ -60,9 +62,10 @@ def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            login(request, user)
             messages.success(request, 'Регистрация успешна')
-            return redirect('login')
+            return redirect('home')
         else:
             messages.error(request, 'Ошибка регистрации')
     else:
@@ -70,8 +73,45 @@ def register(request):
     return render(request, 'news/register.html', {'form': form})
 
 
-def login(request):
-    return render(request, 'news/login.html')
+def user_login(request):
+    if request.method == 'POST':
+        form = UserLoginForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = UserLoginForm()
+    return render(request, 'news/login.html', {'form': form})
+
+
+def user_logout(request):
+    logout(request)
+    return redirect('login')
+
+
+
+def contact(request):
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            mail = send_mail(
+                form.cleaned_data['subject'], 
+                form.cleaned_data['content'],
+                'worldegora@mail.ru',
+                ['worldegora@gmail.com'],
+                fail_silently=True
+                )
+            if mail:
+                messages.success(request, 'Письмо отправлено')
+                return redirect('contact')
+            else:
+                messages.error(request, 'Ошибка отправки')
+        else:
+            messages.error(request, 'Ошибка отправки')
+    else:
+        form = ContactForm()
+    return render(request, 'news/contact.html', {'form': form})
 
 
 # def test(request):
@@ -80,7 +120,6 @@ def login(request):
 #     page_num = request.GET.get('page', 1)
 #     page_objects = paginator.get_page(page_num)
 #     return render(request, 'news/test.html', {'page_obj': page_objects})
-
 
 # def index(request):
 #     news = News.objects.all()
